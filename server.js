@@ -19,15 +19,33 @@ const AT = {
 const AUTO_SEED_FLEET = (process.env.AUTO_SEED_FLEET || 'true').toLowerCase() !== 'false';
 
 async function atFetch(table, suffix='', opts={}) {
-  if (!AT.token || !AT.base || !table) throw new Error('Airtable is not configured');
+  if (!AT.token || !AT.base || !table) throw Object.assign(new Error('Airtable is not configured'),{code:'AIRTABLE_CONFIG'});
   const url = `https://api.airtable.com/v0/${AT.base}/${table}${suffix}`;
-  const r = await fetch(url, {
-    ...opts,
-    headers: {Authorization:`Bearer ${AT.token}`,'Content-Type':'application/json',...(opts.headers||{})}
-  });
-  const body = await r.json().catch(()=>({}));
-  if (!r.ok) throw new Error(body?.error?.message || body?.error?.type || `Airtable ${r.status}`);
-  return body;
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 12000);
+  try {
+    const r = await fetch(url, {
+      ...opts,
+      signal: controller.signal,
+      headers: {Authorization:`Bearer ${AT.token}`,'Content-Type':'application/json',...(opts.headers||{})}
+    });
+    const body = await r.json().catch(()=>({}));
+    if (!r.ok) {
+      const msg = body?.error?.message || body?.error?.type || `Airtable returned HTTP ${r.status}`;
+      const err = new Error(msg);
+      err.status = r.status;
+      err.code = body?.error?.type || 'AIRTABLE_API_ERROR';
+      throw err;
+    }
+    return body;
+  } catch (e) {
+    if (e?.name === 'AbortError') {
+      throw Object.assign(new Error('Airtable did not respond within 12 seconds.'),{status:504,code:'AIRTABLE_TIMEOUT'});
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 async function createRecord(table, fields){
   const b=await atFetch(table,'',{method:'POST',body:JSON.stringify({records:[{fields}],typecast:true})});
@@ -177,7 +195,16 @@ app.post('/api/prequal',async(req,res)=>{
     for(const [k,v] of Object.entries(optional)) if(v!==null&&v!==undefined&&v!=='') fields[k]=v;
     let rec;
     try{rec=await createRecord(AT.applicants,fields)}
-    catch(err){console.error('Airtable applicant validation:',err);return res.status(422).json({error:'We could not save your eligibility application. Please check the information entered and try again.',code:'AIRTABLE_VALIDATION'});}
+    catch(err){
+      console.error('Airtable applicant validation:',err);
+      const safeDetail = ['INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND','AUTHENTICATION_REQUIRED','NOT_FOUND','AIRTABLE_TIMEOUT'].includes(err.code)
+        ? err.message
+        : 'Airtable rejected one or more application fields.';
+      return res.status(err.status===504?504:422).json({
+        error:`We could not save your eligibility application. ${safeDetail}`,
+        code:err.code||'AIRTABLE_VALIDATION'
+      });
+    }
     res.json({ok:true,applicantId:rec.id,portalToken:token,name,email,phone,status:result.status,eligibilityStatus:result.status,score:result.score,tier:result.tier,reasons:result.reasons});
   }catch(e){sendError(res,e)}
 });
