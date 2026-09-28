@@ -68,15 +68,15 @@ async function normalizeExpiredHolds(records){
 function safeVehicle(v){
   const f=v.fields;
   const fallback={
-    '2017 Ford Fusion':'assets/ford-fusion-2017.png',
-    '2018 Ford Fusion':'assets/ford-fusion-2018.png',
-    '2017 Honda Accord':'assets/honda-accord-2017.png'
+    '2017 Ford Fusion':'/ford-fusion-2017.png',
+    '2018 Ford Fusion':'/ford-fusion-2018.png',
+    '2017 Honda Accord':'/honda-accord-2017.png'
   };
   const name=f.Vehicle||`${f.Year||''} ${f.Make||''} ${f.Model||''}`.trim();
   return {
     id:v.id,name,year:f.Year,make:f.Make,model:f.Model,class:f['Vehicle Class']||'Standard',
     rate:Number(f['Weekly Rate']||0),deposit:Number(f.Deposit||500),status:f.Status,
-    photo:f['Vehicle Photos']?.[0]?.url || fallback[name] || 'assets/ford-fusion-2017.png'
+    photo:f['Vehicle Photos']?.[0]?.url || fallback[name] || '/ford-fusion-2017.png'
   };
 }
 function assess(d){
@@ -91,7 +91,13 @@ function assess(d){
   if(budget>=329) score+=2; else if(budget>=279) score+=1; else reasons.push('Weekly budget is below current rates');
   if(d.platformApproved===true || d.platformApproved==='yes') score+=1;
   let status='Conditional Review', tier='Manual Review';
-  if(score>=8 && !reasons.some(x=>x.includes('required'))) {status='Prequalified';tier=budget>=349?'Standard+ / Premium':'Standard';}
+  if(score>=8 && !reasons.some(x=>x.includes('required'))) {
+    status='Prequalified';
+    if(budget>=425) tier='Comfort / XL';
+    else if(budget>=349) tier='Hybrid';
+    else if(budget>=299) tier='Standard';
+    else tier='Economy';
+  }
   if(score<=2 || !(d.licenseValid===true || d.licenseValid==='yes')) {status='Not Eligible';tier='Manual Review';}
   return {score,status,tier,reasons};
 }
