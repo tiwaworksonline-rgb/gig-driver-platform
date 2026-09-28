@@ -1,0 +1,97 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eligibility | GigReady</title><style>
+:root{--ink:#101828;--muted:#667085;--line:#e4e7ec;--green:#20b455;--green2:#159845;--danger:#b42318;--soft:#f7f8fa}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}
+a{text-decoration:none;color:inherit}.wrap{max-width:1160px;margin:auto;padding:0 24px}
+.top{background:#050505;color:#fff}.nav{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{font-size:28px;font-weight:900}.brand span{color:var(--green)}.navlinks{display:flex;gap:18px;align-items:center}.navlinks a{font-size:14px;font-weight:700}
+main{padding:50px 0}.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 8px 28px rgba(16,24,40,.05)}
+h1{font-size:42px;letter-spacing:-1.5px;margin:0 0 10px}h2{margin:0 0 10px}.muted{color:var(--muted);line-height:1.55}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 20px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+.btn-dark{background:#0b1526;color:#fff}.btn-green{background:var(--green);color:#fff}.btn-light{background:#f2f4f7;color:#111}.btn:disabled{opacity:.55;cursor:not-allowed}
+.notice{padding:15px 17px;border-radius:12px;background:#f8fafc;border:1px solid var(--line);margin:18px 0}.success{background:#ecfdf3;border-color:#abefc6}.error{background:#fef3f2;border-color:#fecdca;color:var(--danger)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}.full{grid-column:1/-1}label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}
+input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px;font:inherit}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.navlinks a:not(.primary){display:none}h1{font-size:34px}}
+</style></head>
+<body><div class="top"><div class="wrap nav"><a class="brand" href="index.html">Gig<span>Ready</span></a>
+<div class="navlinks"><a href="index.html">Home</a><a href="vehicles.html">Vehicles</a><a class="btn btn-green primary" href="prequal.html">Check Eligibility</a></div>
+</div></div>
+<main><div class="wrap"><div class="panel">
+<h1>Check your eligibility</h1>
+<p class="muted">Complete this initial rental screening. Prequalification is not final rental approval and does not guarantee platform or vehicle eligibility.</p>
+<div id="serverNotice"></div>
+<form id="f" class="grid">
+<div><label>Full name</label><input id="name" required autocomplete="name"></div>
+<div><label>Email</label><input id="email" type="email" required autocomplete="email"></div>
+<div><label>Phone</label><input id="phone" required autocomplete="tel"></div>
+<div><label>ZIP code</label><input id="zip" required inputmode="numeric"></div>
+<div><label>Age</label><input id="age" type="number" min="18" required></div>
+<div><label>Years licensed</label><input id="yearsLicensed" type="number" min="0" required></div>
+<div><label>Valid driver's license?</label><select id="licenseValid"><option value="yes">Yes</option><option value="no">No</option></select></div>
+<div><label>License suspension in recent history?</label><select id="suspended"><option value="no">No</option><option value="yes">Yes</option></select></div>
+<div><label>DUI/reckless driving in recent history?</label><select id="dui"><option value="no">No</option><option value="yes">Yes</option></select></div>
+<div><label>Recent at-fault accidents</label><input id="accidents" type="number" min="0" value="0"></div>
+<div><label>Primary gig platform</label><select id="platform"><option>Uber</option><option>Lyft</option><option>DoorDash</option><option>Instacart</option><option>Amazon Flex</option><option>Other</option></select></div>
+<div><label>Already approved on that platform?</label><select id="platformApproved"><option value="yes">Yes</option><option value="no">No / not yet</option></select></div>
+<div><label>Weekly vehicle budget</label><input id="budget" type="number" min="0" value="329"></div>
+<div><label>Deposit amount available</label><input id="deposit" type="number" min="0" value="500"></div>
+<div><label>Desired start date</label><input id="startDate" type="date"></div>
+<div><label>Hours planned per week</label><input id="hours" type="number" min="0" value="30"></div>
+<div class="full"><button id="submitBtn" class="btn btn-dark" style="width:100%" type="submit">Check Eligibility</button></div>
+</form><div id="result"></div>
+</div></div></main>
+<script>
+const $=id=>document.getElementById(id);
+const next=new URLSearchParams(location.search).get('next') || localStorage.getItem('gigreadyNextAfterEligibility') || '';
+if(next) localStorage.setItem('gigreadyNextAfterEligibility',next);
+startDate.min=new Date().toISOString().slice(0,10);
+
+async function health(){
+  try{
+    const r=await fetch('/health',{cache:'no-store'});
+    const b=await r.json();
+    if(!r.ok||!b.airtable) throw new Error();
+  }catch(e){serverNotice.innerHTML='<div class="notice error">The application server is not fully connected to Airtable yet. Eligibility cannot be saved until the Render environment variables are configured.</div>'}
+}
+health();
+
+
+async function joinWaitlist(){
+ const a=JSON.parse(localStorage.getItem('gigreadyApplicant')||'null');
+ if(!a?.applicantId||!a?.portalToken){result.innerHTML='<div class="notice error">Please submit eligibility again.</div>';return}
+ const btn=document.getElementById('waitBtn');if(btn)btn.disabled=true;
+ try{const r=await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({applicantId:a.applicantId,portalToken:a.portalToken})});const b=await r.json();if(!r.ok)throw new Error(b.error);
+ a.status='Waitlist';a.eligibilityStatus='Waitlist';localStorage.setItem('gigreadyApplicant',JSON.stringify(a));
+ result.innerHTML=`<div class="notice success"><h2>You're on the GigReady Waitlist</h2><p>We saved your application and plan to follow up around <b>${b.followUp}</b>. You won't need to start over.</p></div>`}
+ catch(e){result.innerHTML=`<div class="notice error">${e.message}</div>`}
+}
+
+f.addEventListener('submit',async(e)=>{
+  e.preventDefault(); submitBtn.disabled=true; result.innerHTML='<div class="notice">Checking eligibility…</div>';
+  const payload={name:name.value.trim(),email:email.value.trim(),phone:phone.value.trim(),zip:zip.value.trim(),age:+age.value,yearsLicensed:+yearsLicensed.value,licenseValid:licenseValid.value,suspended:suspended.value,dui:dui.value,accidents:+accidents.value,platform:platform.value,platformApproved:platformApproved.value,budget:+budget.value,deposit:+deposit.value,startDate:startDate.value,hours:+hours.value};
+  try{
+    const r=await fetch('/api/prequal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    let b={};try{b=await r.json()}catch(_){} if(!r.ok)throw new Error(b.error||'We could not process your eligibility application. Please try again.');
+    const session={...b,name:payload.name,email:payload.email,phone:payload.phone,eligibilityStatus:b.status};
+    localStorage.setItem('gigreadyApplicant',JSON.stringify(session));
+    if(b.status==='Prequalified'){
+      const dest=localStorage.getItem('gigreadyNextAfterEligibility');
+      localStorage.removeItem('gigreadyNextAfterEligibility');
+      result.innerHTML='<div class="notice success"><h2>Prequalified</h2><p>You can now choose a vehicle.</p></div>';
+      setTimeout(()=>location.href=dest||'vehicles.html',650);
+    }else{
+      result.innerHTML=`<div class="notice"><h2>${b.status==='Not Eligible'?'Not eligible right now':b.status}</h2><p>${(b.reasons||[]).join('. ')||'Your application requires additional review.'}</p><p><b>Your eligibility can change.</b> Join our waitlist and we’ll keep your application for a future re-screen.</p><button id="waitBtn" type="button" class="btn btn-green" onclick="joinWaitlist()">Join GigReady Waitlist</button></div>`;
+    }
+  }catch(err){result.innerHTML=`<div class="notice error">${err.message}</div>`}
+  finally{submitBtn.disabled=false}
+});
+</script><script>
+document.addEventListener('error',function(e){
+ if(e.target && e.target.tagName==='IMG' && !e.target.dataset.fallback){
+   e.target.dataset.fallback='1';
+   e.target.src='/assets/hero-driver-main.png';
+ }
+},true);
+</script>
+</body></html>

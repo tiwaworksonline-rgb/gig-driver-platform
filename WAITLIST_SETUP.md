@@ -1,0 +1,1 @@
+Waitlist is enabled. Set AIRTABLE_FOLLOWUPS_TABLE=tblv9ZcfiO0HzBfiP in Render. Follow-up is scheduled 30 days after waitlist enrollment. Starter car images are embedded in vehicles.html and do not depend on asset URLs.

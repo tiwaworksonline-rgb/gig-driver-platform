@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Privacy | GigReady</title><style>
+:root{--black:#000;--ink:#111;--muted:#667085;--line:#e5e7eb;--soft:#f6f7f9;--green:#20b455;--green2:#159845;--white:#fff;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}a{text-decoration:none;color:inherit}
+.wrap{max-width:1100px;margin:auto;padding:0 24px}.top{background:#000;color:#fff}.nav{height:70px;display:flex;align-items:center;justify-content:space-between}.brand{font-size:27px;font-weight:850}.brand span{color:var(--green)}.nav a{margin-left:18px;font-size:14px}
+main{padding:56px 0}.panel{border:1px solid var(--line);border-radius:18px;padding:26px;background:#fff;box-shadow:0 8px 25px rgba(0,0,0,.04)}h1{font-size:42px;letter-spacing:-1.8px;margin:0 0 12px}h2{margin:0 0 12px}.muted{color:var(--muted);line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.full{grid-column:1/-1}
+label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px;font:inherit}textarea{min-height:110px}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 20px;border-radius:9px;font-weight:800;border:0;cursor:pointer}.btn-dark{background:#000;color:#fff}.btn-green{background:var(--green);color:#fff}.btn-light{background:#f2f4f7;color:#111}.btn:disabled{opacity:.55;cursor:not-allowed}
+.notice{padding:15px 17px;border-radius:12px;background:#f8fafc;border:1px solid var(--line);margin:18px 0}.success{background:#ecfdf3;border-color:#abefc6}.error{background:#fef3f2;border-color:#fecdca;color:var(--danger)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.car{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}.car img{width:100%;height:205px;object-fit:cover}.carbody{padding:18px}.car h3{margin:0 0 6px}.rate{font-size:25px;font-weight:900;margin:14px 0}.pill{display:inline-block;background:#e8f8ee;color:#17783e;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+.statusrow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}.statusbox{padding:16px;border-radius:13px;background:#f8fafc;border:1px solid var(--line)}.statusbox b{display:block;font-size:13px}.statusbox span{font-size:12px;color:var(--muted)}
+footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:12px;margin-top:50px}
+@media(max-width:800px){.grid,.cards,.statusrow{grid-template-columns:1fr}.full{grid-column:auto}h1{font-size:34px}}
+</style></head><body><div class="top"><div class="wrap nav"><a class="brand" href="index.html">Gig<span>Ready</span></a><div><a href="index.html">Home</a><a href="vehicles.html">Vehicles</a><a href="prequal.html">Eligibility</a></div></div></div><main><div class="wrap"><div class="panel"><h1>Privacy notice</h1><p class="muted">Draft for counsel review before production launch.</p><p>GigReady collects information you provide during rental screening, vehicle selection, scheduling, support, and rental administration. Payment information is processed by Stripe; identity-verification information is handled through Stripe Identity according to Stripe's applicable terms and privacy practices.</p><p>Information may be used to evaluate rental eligibility, administer rentals, prevent fraud, manage payments, maintain vehicles, comply with legal requirements, and communicate about your application or rental. Do not submit sensitive information through general support forms unless specifically requested through a secure workflow.</p></div></div></main><footer><div class="wrap"><a href="index.html"><b>← Back to GigReady</b></a></div></footer><script>
+document.addEventListener('error',function(e){
+ if(e.target && e.target.tagName==='IMG' && !e.target.dataset.fallback){
+   e.target.dataset.fallback='1';
+   e.target.src='/assets/hero-driver-main.png';
+ }
+},true);
+</script>
+</body></html>

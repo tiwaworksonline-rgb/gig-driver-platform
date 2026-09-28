@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vehicle Booking | GigReady</title><style>
+:root{--ink:#101828;--muted:#667085;--line:#e4e7ec;--green:#20b455;--green2:#159845;--danger:#b42318;--soft:#f7f8fa}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}
+a{text-decoration:none;color:inherit}.wrap{max-width:1160px;margin:auto;padding:0 24px}
+.top{background:#050505;color:#fff}.nav{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{font-size:28px;font-weight:900}.brand span{color:var(--green)}.navlinks{display:flex;gap:18px;align-items:center}.navlinks a{font-size:14px;font-weight:700}
+main{padding:50px 0}.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 8px 28px rgba(16,24,40,.05)}
+h1{font-size:42px;letter-spacing:-1.5px;margin:0 0 10px}h2{margin:0 0 10px}.muted{color:var(--muted);line-height:1.55}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 20px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
+.btn-dark{background:#0b1526;color:#fff}.btn-green{background:var(--green);color:#fff}.btn-light{background:#f2f4f7;color:#111}.btn:disabled{opacity:.55;cursor:not-allowed}
+.notice{padding:15px 17px;border-radius:12px;background:#f8fafc;border:1px solid var(--line);margin:18px 0}.success{background:#ecfdf3;border-color:#abefc6}.error{background:#fef3f2;border-color:#fecdca;color:var(--danger)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}.full{grid-column:1/-1}label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}
+input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px;font:inherit}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.navlinks a:not(.primary){display:none}h1{font-size:34px}}
+</style></head>
+<body><div class="top"><div class="wrap nav"><a class="brand" href="index.html">Gig<span>Ready</span></a>
+<div class="navlinks"><a href="index.html">Home</a><a href="vehicles.html">Vehicles</a><a class="btn btn-green primary" href="prequal.html">Check Eligibility</a></div>
+</div></div>
+<main><div class="wrap"><div class="panel"><h1>Vehicle booking has moved</h1>
+<p class="muted">GigReady now places the vehicle hold directly from the vehicle page so your request cannot become disconnected from your application.</p>
+<a class="btn btn-green" href="vehicles.html">Choose a vehicle</a></div></div></main>
+<script></script><script>
+document.addEventListener('error',function(e){
+ if(e.target && e.target.tagName==='IMG' && !e.target.dataset.fallback){
+   e.target.dataset.fallback='1';
+   e.target.src='/assets/hero-driver-main.png';
+ }
+},true);
+</script>
+</body></html>

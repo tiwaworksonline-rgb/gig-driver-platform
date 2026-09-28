@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GigReady | Weekly Cars for Gig Drivers</title>
+<meta name="description" content="Weekly vehicle access for qualified rideshare and delivery drivers. Check eligibility, choose a car, verify, pay, and schedule pickup.">
+<style>
+:root{
+  --black:#000;
+  --ink:#111;
+  --muted:#5f6368;
+  --line:#e5e5e5;
+  --soft:#f6f6f6;
+  --green:#20b455;
+  --green-dark:#159845;
+  --white:#fff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+
+header{background:#000;color:#fff;position:sticky;top:0;z-index:30}
+.nav{height:72px;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.brand{font-size:30px;font-weight:800;letter-spacing:-1.2px}
+.brand span{color:var(--green)}
+.navlinks{display:flex;gap:26px;font-size:14px;font-weight:600}
+.nav-actions{display:flex;gap:10px;align-items:center}
+.nav-actions a{padding:11px 16px;border-radius:8px;font-size:14px;font-weight:700}
+.signin{background:transparent;color:#fff}
+.eligibility{background:#20b455;color:#fff;border:1px solid #20b455;box-shadow:0 2px 8px rgba(32,180,85,.24);transition:.18s ease}.eligibility:hover{background:#159845;border-color:#159845;transform:translateY(-1px)}
+
+.hero{padding:46px 0 54px}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:center}
+.hero h1{font-size:64px;line-height:.98;letter-spacing:-3.2px;margin:0 0 24px}
+.hero p{font-size:20px;line-height:1.55;color:#333;max-width:540px;margin:0}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:15px 22px;border-radius:8px;font-weight:700;border:1px solid transparent}
+.btn-dark{background:#000;color:#fff}
+.btn-light{background:#f3f3f3;color:#000}
+.hero-media{border-radius:2px;overflow:hidden;background:#eee}
+.hero-media img{width:100%;height:500px;object-fit:cover}
+
+.quickbar{background:#f3f3f3;border-top:1px solid #ededed;border-bottom:1px solid #ededed}
+.quickgrid{display:grid;grid-template-columns:repeat(4,1fr)}
+.quickitem{padding:25px 22px;border-right:1px solid #ddd}
+.quickitem:last-child{border-right:0}
+.quickitem b{display:block;font-size:17px;margin-bottom:5px}
+.quickitem span{font-size:13px;color:var(--muted)}
+
+.section{padding:80px 0}
+.section h2{font-size:44px;line-height:1.08;letter-spacing:-2px;margin:0 0 16px}
+.section-lead{font-size:18px;line-height:1.6;color:var(--muted);max-width:720px}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.image-panel img{width:100%;height:430px;object-fit:cover}
+.steps{display:grid;gap:22px;margin-top:28px}
+.step{display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:start}
+.stepnum{width:34px;height:34px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.step h3{margin:2px 0 6px;font-size:20px}
+.step p{margin:0;color:var(--muted);line-height:1.5;font-size:14px}
+
+.fleet{background:#f6f6f6}
+.fleet-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:30px}
+.fleet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.car{background:#fff}
+.car img{width:100%;height:220px;object-fit:cover}
+.carbody{padding:20px}
+.cartop{display:flex;justify-content:space-between;gap:12px}
+.car h3{font-size:21px;margin:0}
+.price{font-size:22px;font-weight:800;white-space:nowrap}
+.price small{font-size:12px;font-weight:500}
+.carmeta{font-size:13px;color:var(--muted);margin-top:8px}
+.carcta{margin-top:16px;font-size:13px;font-weight:700;text-decoration:underline}
+
+.pricing-box{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.rate-card{background:#000;color:#fff;padding:38px}
+.rate-card .from{font-size:15px;color:#ccc}
+.rate-card .big{font-size:58px;line-height:1;font-weight:800;margin:10px 0}
+.rate-card .big span{font-size:16px;font-weight:500}
+.rate-card p{color:#ddd;line-height:1.55;margin-bottom:0}
+.payment-steps{display:grid;gap:18px}
+.payment-step{padding:18px 0;border-bottom:1px solid var(--line)}
+.payment-step:last-child{border-bottom:0}
+.payment-step b{display:block;font-size:18px;margin-bottom:5px}
+.payment-step span{font-size:14px;color:var(--muted);line-height:1.5}
+
+.safety{background:#000;color:#fff}
+.safety-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center}
+.safety h2{color:#fff}
+.safety p{color:#d5d5d5;line-height:1.6}
+.safety-list{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:28px}
+.safety-card{border-top:1px solid #444;padding-top:16px}
+.safety-card b{display:block;margin-bottom:5px}
+.safety-card span{font-size:13px;color:#c5c5c5}
+
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
+details{border-top:1px solid var(--line);padding:18px 0}
+summary{font-weight:700;cursor:pointer}
+details p{font-size:14px;color:var(--muted);line-height:1.5}
+
+.cta-band{background:#f3f3f3;padding:56px 0}
+.cta-inner{display:flex;align-items:center;justify-content:space-between;gap:30px}
+.cta-inner h2{font-size:38px;margin:0}
+footer{background:#000;color:#fff;padding:44px 0}
+.footer-grid{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:36px}
+.footer-grid h4{margin:0 0 14px;font-size:14px}
+.footer-grid a{display:block;color:#cfcfcf;font-size:13px;margin:9px 0}
+.footer-note{border-top:1px solid #333;margin-top:34px;padding-top:20px;font-size:12px;color:#aaa}
+
+@media(max-width:900px){
+  .navlinks{display:none}
+  .hero-grid,.split,.pricing-box,.safety-grid{grid-template-columns:1fr}
+  .hero h1{font-size:50px}
+  .hero-media img{height:380px}
+  .quickgrid{grid-template-columns:1fr 1fr}
+  .quickitem:nth-child(2){border-right:0}
+  .fleet-grid{grid-template-columns:1fr 1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  .wrap{padding:0 18px}
+  .hero h1{font-size:42px}
+  .hero p{font-size:18px}
+  .quickgrid,.fleet-grid,.faq-grid,.footer-grid{grid-template-columns:1fr}
+  .quickitem{border-right:0;border-bottom:1px solid #ddd}
+  .safety-list{grid-template-columns:1fr}
+  .cta-inner{flex-direction:column;align-items:flex-start}
+  .fleet-head{align-items:flex-start;flex-direction:column}
+}
+
+.pricing-visual-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:60px;
+  align-items:center
+}
+.pricing-visual{
+  position:relative;
+  overflow:hidden;
+  min-height:420px;
+  background:#f3f3f3
+}
+.pricing-visual img{
+  width:100%;
+  height:420px;
+  object-fit:cover
+}
+.pricing-overlay{
+  position:absolute;
+  left:24px;
+  right:24px;
+  bottom:24px;
+  background:rgba(0,0,0,.92);
+  color:#fff;
+  padding:24px
+}
+.pricing-overlay span{
+  display:block;
+  font-size:13px;
+  color:#d0d0d0
+}
+.pricing-overlay strong{
+  display:block;
+  font-size:44px;
+  line-height:1.05;
+  margin:7px 0
+}
+.pricing-overlay small{
+  font-size:14px;
+  font-weight:500
+}
+.pricing-overlay p{
+  margin:0;
+  font-size:13px;
+  color:#ddd
+}
+.final-cta{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  background:#fff;
+  min-height:310px
+}
+.final-cta-copy{
+  padding:50px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center
+}
+.final-cta-copy h2{
+  font-size:42px;
+  letter-spacing:-2px;
+  margin:0 0 14px
+}
+.final-cta-copy p{
+  color:var(--muted);
+  line-height:1.55;
+  margin:0 0 24px;
+  max-width:470px
+}
+.final-cta-image img{
+  width:100%;
+  height:310px;
+  object-fit:cover
+}
+@media(max-width:900px){
+  .pricing-visual-grid,.final-cta{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">Gig<span>Ready</span></a>
+    <nav class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#vehicles">Vehicles</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#safety">Safety</a>
+      <a href="#faq">Help</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="signin" href="dashboard.html">Driver dashboard</a>
+      <a class="eligibility" href="./prequal.html">Check eligibility</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Drive more.<br>Own less.</h1>
+      <p>Get access to a reliable car for rideshare and delivery work with a simple weekly rental plan.</p>
+      <div class="hero-actions">
+        <a class="btn btn-dark" href="./prequal.html">Check eligibility</a>
+        <a class="btn btn-light" href="#how">How it works</a>
+      </div>
+    </div>
+    <div class="hero-media"><img src="/assets/hero-driver-main.png" alt="Gig driver with vehicle"></div>
+  </div>
+</section>
+
+<section class="quickbar">
+  <div class="wrap quickgrid">
+    <div class="quickitem"><b>Weekly plans</b><span>Know your rental rate before you start.</span></div>
+    <div class="quickitem"><b>Gig-ready vehicles</b><span>Practical cars for approved rideshare and delivery use.</span></div>
+    <div class="quickitem"><b>Secure payments</b><span>Simple autopay once your rental is active.</span></div>
+    <div class="quickitem"><b>Local pickup</b><span>Schedule pickup after final approval.</span></div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="wrap split">
+    <div class="image-panel"><img src="/assets/driver-how-it-works.png" alt="Driver preparing to begin gig work"></div>
+    <div>
+      <h2>Get on the road in a few simple steps.</h2>
+      <p class="section-lead">We keep the process clear so you know what happens before you ever pick up a car.</p>
+      <div class="steps">
+        <div class="step"><div class="stepnum">1</div><div><h3>Check eligibility</h3><p>Complete a quick rental prequalification.</p></div></div>
+        <div class="step"><div class="stepnum">2</div><div><h3>Choose your car</h3><p>See the vehicles and weekly rates available to you.</p></div></div>
+        <div class="step"><div class="stepnum">3</div><div><h3>Verify and pay</h3><p>Complete secure identity verification and payment setup.</p></div></div>
+        <div class="step"><div class="stepnum">4</div><div><h3>Schedule pickup</h3><p>Finish final approval and confirm your pickup appointment.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section fleet" id="vehicles">
+  <div class="wrap">
+    <div class="fleet-head">
+      <div>
+        <h2>Cars that work for gig work.</h2>
+        <p class="section-lead">Fuel-efficient sedans with practical space and simple weekly pricing.</p>
+      </div>
+      <a class="btn btn-dark" href="vehicles.html">View available vehicles</a>
+    </div>
+
+    <div class="fleet-grid">
+      <article class="car">
+        <img src="/assets/ford-fusion-2017.png" alt="2017 Ford Fusion sedan">
+        <div class="carbody">
+          <div class="cartop"><h3>2017 Ford Fusion</h3><div class="price">$329<small>/week</small></div></div>
+          <div class="carmeta">Automatic • 4 door • Great on gas</div>
+          <a class="carcta" href="vehicles.html">View vehicles →</a>
+        </div>
+      </article>
+
+      <article class="car">
+        <img src="/assets/ford-fusion-2018.png" alt="2018 Ford Fusion sedan">
+        <div class="carbody">
+          <div class="cartop"><h3>2018 Ford Fusion</h3><div class="price">$329<small>/week</small></div></div>
+          <div class="carmeta">Automatic • 4 door • Comfortable</div>
+          <a class="carcta" href="vehicles.html">View vehicles →</a>
+        </div>
+      </article>
+
+      <article class="car">
+        <img src="/assets/honda-accord-2017.png" alt="2017 Honda Accord sedan">
+        <div class="carbody">
+          <div class="cartop"><h3>2017 Honda Accord</h3><div class="price">$349<small>/week</small></div></div>
+          <div class="carmeta">Automatic • 4 door • Spacious</div>
+          <a class="carcta" href="vehicles.html">View vehicles →</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="pricing-visual-grid">
+      <div class="pricing-copy">
+        <div style="font-size:13px;font-weight:800;margin-bottom:10px">SIMPLE WEEKLY PRICING</div>
+        <h2>One clear weekly payment.</h2>
+        <p class="section-lead">Choose the vehicle that fits your budget and know the weekly rental amount before you move forward.</p>
+
+        <div class="payment-steps">
+          <div class="payment-step"><b>Choose your car</b><span>Compare available vehicles and select the one that works for your driving needs.</span></div>
+          <div class="payment-step"><b>See your weekly rate</b><span>Your selected vehicle has a clearly displayed weekly rental price.</span></div>
+          <div class="payment-step"><b>Set up secure autopay</b><span>Add your payment method once and authorize automatic weekly billing.</span></div>
+        </div>
+      </div>
+
+      <div class="pricing-visual">
+        <img src="/assets/pricing-car.png" alt="Gig-ready car available with weekly pricing">
+        <div class="pricing-overlay">
+          <span>Weekly rentals from</span>
+          <strong>$329<small>/week</small></strong>
+          <p>Know your operating cost before you drive.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section safety" id="safety">
+  <div class="wrap safety-grid">
+    <div>
+      <h2>A rental process built around trust and accountability.</h2>
+      <p>Every driver goes through a qualification and verification process before a vehicle is released. Vehicle availability and final approval are confirmed before pickup.</p>
+      <div class="safety-list">
+        <div class="safety-card"><b>Identity verification</b><span>Secure verification before checkout.</span></div>
+        <div class="safety-card"><b>License review</b><span>Driver eligibility is checked before final approval.</span></div>
+        <div class="safety-card"><b>Vehicle inspections</b><span>Fleet condition is managed between rentals.</span></div>
+        <div class="safety-card"><b>Recurring payments</b><span>Weekly autopay keeps billing simple.</span></div>
+      </div>
+    </div>
+    <div class="image-panel"><img src="/assets/driver-safety.png" alt="Driver using the GigReady platform"></div>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="wrap">
+    <h2>Questions before you start?</h2>
+    <div class="faq-grid">
+      <details><summary>Does eligibility guarantee a car?</summary><p>No. Prequalification helps determine fit. Final approval still depends on identity, license, driving history, insurance, documents, payment, and current vehicle availability.</p></details>
+      <details><summary>How do weekly payments work?</summary><p>Once your rental is activated, the weekly rate for your selected vehicle is billed automatically according to your rental agreement.</p></details>
+      <details><summary>Can I use the car for Uber or Lyft?</summary><p>Platform eligibility depends on the vehicle, driver account, current platform rules, local requirements, insurance, and the final rental arrangement.</p></details>
+      <details><summary>What happens after I choose a car?</summary><p>You complete identity verification, payment setup, final document review, and then schedule pickup.</p></details>
+    </div>
+  </div>
+</section>
+
+
+<section class="cta-band">
+  <div class="wrap">
+    <div class="final-cta">
+      <div class="final-cta-copy">
+        <h2>Ready to get on the road?</h2>
+        <p>Check your eligibility, see available vehicles, and find the weekly plan that fits your budget.</p>
+        <a class="btn btn-dark" href="./prequal.html">Check eligibility</a>
+      </div>
+      <div class="final-cta-image">
+        <img src="/assets/hero-driver-main.png" alt="Driver ready to get on the road">
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="brand">Gig<span>Ready</span></div>
+        <p style="color:#bbb;font-size:13px;line-height:1.5">Weekly vehicle access for qualified gig drivers.</p>
+      </div>
+      <div><h4>Drivers</h4><a href="#how">How it works</a><a href="#vehicles">Vehicles</a><a href="#pricing">Pricing</a></div>
+      <div><h4>Support</h4><a href="#faq">Help</a><a href="#safety">Safety</a><a href="#faq">Contact</a></div>
+      <div><h4>Legal</h4><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="rental-policies.html">Rental policies</a></div>
+    </div>
+    <div class="footer-note">Eligibility, pricing, vehicle availability, and platform use are subject to final verification and rental terms.</div>
+  </div>
+</footer>
+<script>
+document.addEventListener('error',function(e){
+ if(e.target && e.target.tagName==='IMG' && !e.target.dataset.fallback){
+   e.target.dataset.fallback='1';
+   e.target.src='/assets/hero-driver-main.png';
+ }
+},true);
+</script>
+</body>
+</html>
