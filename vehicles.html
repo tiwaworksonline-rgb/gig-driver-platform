@@ -30,9 +30,9 @@ input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-ra
 </style>
 <script>
 const fallback={
-"2017 Ford Fusion":"/assets/ford-fusion-2017.png",
-"2018 Ford Fusion":"/assets/ford-fusion-2018.png",
-"2017 Honda Accord":"/assets/honda-accord-2017.png"
+"2017 Ford Fusion":"/ford-fusion-2017.png",
+"2018 Ford Fusion":"/ford-fusion-2018.png",
+"2017 Honda Accord":"/honda-accord-2017.png"
 };
 const session=JSON.parse(localStorage.getItem('gigreadyApplicant')||'null');
 const chosen=localStorage.getItem('gigreadySelectedVehicleId');
@@ -74,7 +74,7 @@ load();
 document.addEventListener('error',function(e){
  if(e.target && e.target.tagName==='IMG' && !e.target.dataset.fallback){
    e.target.dataset.fallback='1';
-   e.target.src='/assets/hero-driver-main.png';
+   e.target.src='/hero-driver-main.png';
  }
 },true);
 </script>

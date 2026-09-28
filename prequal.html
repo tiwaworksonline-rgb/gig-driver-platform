@@ -90,7 +90,7 @@ f.addEventListener('submit',async(e)=>{
 document.addEventListener('error',function(e){
  if(e.target && e.target.tagName==='IMG' && !e.target.dataset.fallback){
    e.target.dataset.fallback='1';
-   e.target.src='/assets/hero-driver-main.png';
+   e.target.src='/hero-driver-main.png';
  }
 },true);
 </script>
