@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Eligibility | GigReady</title><style>
+<title>Eligibility | GigReady</title><!-- prequal diagnostic build 2026-09-28 --><style>
 :root{--ink:#101828;--muted:#667085;--line:#e4e7ec;--green:#20b455;--green2:#159845;--danger:#b42318;--soft:#f7f8fa}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}
 a{text-decoration:none;color:inherit}.wrap{max-width:1160px;margin:auto;padding:0 24px}
@@ -71,7 +71,20 @@ f.addEventListener('submit',async(e)=>{
   e.preventDefault(); submitBtn.disabled=true; result.innerHTML='<div class="notice">Checking eligibility…</div>';
   const payload={name:name.value.trim(),email:email.value.trim(),phone:phone.value.trim(),zip:zip.value.trim(),age:+age.value,yearsLicensed:+yearsLicensed.value,licenseValid:licenseValid.value,suspended:suspended.value,dui:dui.value,accidents:+accidents.value,platform:platform.value,platformApproved:platformApproved.value,budget:+budget.value,deposit:+deposit.value,startDate:startDate.value,hours:+hours.value};
   try{
-    const r=await fetch('/api/prequal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),20000);
+    let r;
+    try{
+      r=await fetch('/api/prequal',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload),
+        signal:controller.signal,
+        cache:'no-store'
+      });
+    }finally{
+      clearTimeout(timeout);
+    }
     let b={};try{b=await r.json()}catch(_){} if(!r.ok)throw new Error(b.error||'We could not process your eligibility application. Please try again.');
     const session={...b,name:payload.name,email:payload.email,phone:payload.phone,eligibilityStatus:b.status};
     localStorage.setItem('gigreadyApplicant',JSON.stringify(session));
@@ -83,14 +96,19 @@ f.addEventListener('submit',async(e)=>{
     }else{
       result.innerHTML=`<div class="notice"><h2>${b.status==='Not Eligible'?'Not eligible right now':b.status}</h2><p>${(b.reasons||[]).join('. ')||'Your application requires additional review.'}</p><p><b>Your eligibility can change.</b> Join our waitlist and we’ll keep your application for a future re-screen.</p><button id="waitBtn" type="button" class="btn btn-green" onclick="joinWaitlist()">Join GigReady Waitlist</button></div>`;
     }
-  }catch(err){result.innerHTML=`<div class="notice error">${err.message}</div>`}
+  }catch(err){
+    const msg=err.name==='AbortError'
+      ? 'The eligibility request took too long. Please try once more. If this continues, contact GigReady support.'
+      : (err.message||'We could not process your eligibility application. Please try again.');
+    result.innerHTML=`<div class="notice error">${msg}</div>`;
+  }
   finally{submitBtn.disabled=false}
 });
 </script><script>
 document.addEventListener('error',function(e){
  if(e.target && e.target.tagName==='IMG' && !e.target.dataset.fallback){
    e.target.dataset.fallback='1';
-   e.target.src='/hero-driver-main.png';
+   e.target.src='/assets/hero-driver-main.png';
  }
 },true);
 </script>

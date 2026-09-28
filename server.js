@@ -181,6 +181,9 @@ app.use((req,res,next)=>{
 app.use(express.static(__dirname,{etag:true,maxAge:'1h'}));
 
 app.post('/api/prequal',async(req,res)=>{
+  const requestId=crypto.randomBytes(4).toString('hex');
+  const started=Date.now();
+  console.log(`[PREQUAL ${requestId}] request received`);
   try{
     const d=req.body||{};
     const clean=v=>typeof v==='string'?v.trim():v;
@@ -194,9 +197,13 @@ app.post('/api/prequal',async(req,res)=>{
     const optional={'ZIP Code':clean(d.zip),'Age':num(d.age),'Years Licensed':num(d.yearsLicensed),'Gig Platforms':clean(d.platform),'Weekly Budget':num(d.budget),'Deposit Available':num(d.deposit),'Desired Start Date':validDate(d.startDate),'Hours Planned Per Week':num(d.hours)};
     for(const [k,v] of Object.entries(optional)) if(v!==null&&v!==undefined&&v!=='') fields[k]=v;
     let rec;
-    try{rec=await createRecord(AT.applicants,fields)}
+    try{
+      console.log(`[PREQUAL ${requestId}] sending applicant to Airtable`);
+      rec=await createRecord(AT.applicants,fields);
+      console.log(`[PREQUAL ${requestId}] Airtable saved record in ${Date.now()-started}ms`);
+    }
     catch(err){
-      console.error('Airtable applicant validation:',err);
+      console.error(`[PREQUAL ${requestId}] Airtable failed after ${Date.now()-started}ms:`,err.code||err.name||'ERROR',err.message);
       const safeDetail = ['INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND','AUTHENTICATION_REQUIRED','NOT_FOUND','AIRTABLE_TIMEOUT'].includes(err.code)
         ? err.message
         : 'Airtable rejected one or more application fields.';
@@ -205,6 +212,7 @@ app.post('/api/prequal',async(req,res)=>{
         code:err.code||'AIRTABLE_VALIDATION'
       });
     }
+    console.log(`[PREQUAL ${requestId}] response success in ${Date.now()-started}ms`);
     res.json({ok:true,applicantId:rec.id,portalToken:token,name,email,phone,status:result.status,eligibilityStatus:result.status,score:result.score,tier:result.tier,reasons:result.reasons});
   }catch(e){sendError(res,e)}
 });
