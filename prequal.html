@@ -20,7 +20,7 @@ input,select{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px
 <div class="navlinks"><a href="/index.html">Home</a><a href="/vehicles.html">Vehicles</a><a class="btn btn-green primary" href="/prequal.html">Check Eligibility</a></div></div></div>
 <main><div class="wrap"><div class="panel">
 <h1>Check your eligibility</h1>
-<p class="muted">Complete this initial rental screening. Prequalification is not final rental approval and does not guarantee platform or vehicle eligibility.</p>
+<p class="muted">Complete this initial rental screening. GigReady rentals are $350/week with insurance included and unlimited mileage, plus a $500 deposit. Prequalification is not final rental approval and does not guarantee platform or vehicle eligibility.</p><div class="notice"><b>Before you start:</b> Have a valid driver’s license, be prepared for final driving-history and identity review, and tell us which gig platform you plan to use. Qualified drivers who complete a rental and vehicle pickup receive a $25 gas card.*</div>
 <div id="serverNotice"></div>
 <form id="eligibilityForm" class="grid">
 <div><label>Full name</label><input id="name" required autocomplete="name"></div>
@@ -35,13 +35,13 @@ input,select{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px
 <div><label>Recent at-fault accidents</label><input id="accidents" type="number" min="0" value="0"></div>
 <div><label>Which gig platform do you plan to drive or deliver with?</label><select id="platform"><option>Uber</option><option>Lyft</option><option>DoorDash</option><option>Instacart</option><option>Amazon Flex</option><option>Other</option></select></div>
 <div><label>Are you currently approved to drive or deliver with that platform?</label><select id="platformApproved"><option value="yes">Yes — approved</option><option value="active">Yes — active and accepting trips/deliveries</option><option value="pending">Application pending</option><option value="no">Not yet — I plan to apply</option></select></div>
-<div><label>Weekly vehicle budget</label><input id="budget" type="number" min="0" value="329"></div>
+<div><label>Weekly vehicle budget</label><input id="budget" type="number" min="0" value="350"></div>
 <div><label>Deposit amount available</label><input id="deposit" type="number" min="0" value="500"></div>
 <div><label>Desired start date</label><input id="startDate" type="date"></div>
 <div><label>Hours planned per week</label><input id="hours" type="number" min="0" value="30"></div>
 <div class="full"><button id="submitBtn" class="btn btn-dark" style="width:100%" type="submit">Check Eligibility</button><div id="requestStatus" class="statusline"></div></div>
 </form><div id="result"></div>
-</div></div></main>
+<p class="muted" style="font-size:12px;margin-top:18px">*$25 gas card available to qualified drivers who complete a rental and vehicle pickup; one per driver, while supplies last. Insurance coverage and unlimited mileage are subject to the rental agreement.</p></div></div></main>
 <script>
 (()=> {
   'use strict';
