@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verify Identity | GigReady</title><style>
+<title>Driver & Identity Verification | GigReady</title><style>
 :root{--ink:#101828;--muted:#667085;--line:#e4e7ec;--green:#20b455;--green2:#159845;--danger:#b42318;--soft:#f7f8fa}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff}
 a{text-decoration:none;color:inherit}.wrap{max-width:1160px;margin:auto;padding:0 24px}
@@ -17,10 +17,11 @@ input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-ra
 <body><div class="top"><div class="wrap nav"><a class="brand" href="index.html">Gig<span>Ready</span></a>
 <div class="navlinks"><a href="index.html">Home</a><a href="vehicles.html">Vehicles</a><a class="btn btn-green primary" href="prequal.html">Check Eligibility</a></div>
 </div></div>
-<main><div class="wrap"><div class="panel"><h1>Verify your identity</h1>
-<p class="muted">Your selected vehicle is temporarily held while you complete secure government-ID and selfie verification through Stripe Identity.</p>
+<main><div class="wrap"><div class="panel"><h1>Driver &amp; Identity Verification</h1>
+<p class="muted">Verify your identity and valid driver's license securely before completing your rental.</p>
+<div class="notice"><b>Have your physical driver's license ready.</b> Complete the secure document capture requested by Stripe Identity, including the required sides of your ID and a matching selfie. GigReady does not ask you to email or upload license images directly to us.</div>
 <div class="notice">Complete this step promptly. If the 30-minute hold expires before checkout, the vehicle may return to inventory.</div>
-<button id="go" class="btn btn-dark">Start secure verification</button><div id="msg"></div>
+<button id="go" class="btn btn-dark">Verify Driver & Identity</button><div id="msg"></div>
 </div></div></main>
 <script>
 const q=new URLSearchParams(location.search),applicantId=q.get('applicantId'),rentalId=q.get('rentalId'),token=q.get('token');
