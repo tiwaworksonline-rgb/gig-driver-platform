@@ -10,16 +10,13 @@ const BASE_URL = (process.env.PUBLIC_BASE_URL || `http://localhost:${PORT}`).rep
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const APPLICATION_FROM_EMAIL = process.env.APPLICATION_FROM_EMAIL || '';
-
 function escHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-async function sendEmail(to,subject,html){
-  if(!RESEND_API_KEY || !APPLICATION_FROM_EMAIL || !to) return {sent:false,reason:'email_not_configured'};
-  const rr=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+RESEND_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({from:APPLICATION_FROM_EMAIL,to:[to],subject,html})});
-  if(!rr.ok) throw new Error('Email delivery failed: '+rr.status);
-  return {sent:true};
-}
 async function sendApplicationConfirmation(d,result){
-  const rows=[['Name',d.name],['Email',d.email],['Phone',d.phone],['ZIP code',d.zip],['Age',d.age],['Years licensed',d.yearsLicensed],['Valid driver license',d.licenseValid],['Recent license suspension',d.suspended],['Recent DUI/reckless driving',d.dui],['Recent at-fault accidents',d.accidents],['Gig platform',d.platform],['Platform approval status',d.platformApproved],['Weekly vehicle budget',d.budget?('
+  if(!RESEND_API_KEY || !APPLICATION_FROM_EMAIL || !d.email) return {sent:false,reason:'email_not_configured'};
+  const rows=[
+    ['Name',d.name],['Email',d.email],['Phone',d.phone],['ZIP code',d.zip],['Age',d.age],['Years licensed',d.yearsLicensed],
+    ['Valid driver license',d.licenseValid],['Gig platform',d.platform],['Platform approval status',d.platformApproved],
+    ['Weekly vehicle budget',d.budget?('
 
 const AT = {
   base: process.env.AIRTABLE_BASE_ID,
@@ -101,7 +98,7 @@ function assess(d){
   if(d.dui===true || d.dui==='yes') {score-=5; reasons.push('DUI/reckless history requires review');}
   if(Number(d.accidents||0)>=3){score-=3; reasons.push('Multiple recent accidents require review');}
   if(budget>=329) score+=2; else if(budget>=279) score+=1; else reasons.push('Weekly budget is below current rates');
-  if(d.platformApproved===true || d.platformApproved==='yes') score+=1;
+  if(d.platformApproved===true || ['yes','active'].includes(String(d.platformApproved).toLowerCase())) score+=1;
   let status='Conditional Review', tier='Manual Review';
   if(score>=8 && !reasons.some(x=>x.includes('required'))) {
     status='Prequalified';
@@ -179,18 +176,19 @@ app.post('/api/prequal',async(req,res)=>{
     const d=req.body||{};
     const clean=v=>typeof v==='string'?v.trim():v;
     const yes=v=>v===true || String(v).toLowerCase()==='yes';
+    const platformApproved=v=>v===true || ['yes','active'].includes(String(v).toLowerCase());
     const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null};
     const validDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(clean(v)||'')?clean(v):null;
     const name=clean(d.name),email=clean(d.email),phone=clean(d.phone);
     if(!name||!email||!phone) return res.status(400).json({error:'Please enter your name, email and phone number.'});
     const result=assess(d),token=crypto.randomBytes(24).toString('hex');
-    const fields={'Applicant Name':name,'Email':email,'Phone':phone,'License Valid':yes(d.licenseValid),'Already Platform Approved':yes(d.platformApproved),'Prequal Status':result.status,'Qualified Tier':result.tier,'Risk Notes':`Score ${result.score}. ${result.reasons.join('; ')}`,'Lead Source':'Website','Portal Token':token};
+    const fields={'Applicant Name':name,'Email':email,'Phone':phone,'License Valid':yes(d.licenseValid),'Already Platform Approved':platformApproved(d.platformApproved),'Prequal Status':result.status,'Qualified Tier':result.tier,'Risk Notes':`Score ${result.score}. ${result.reasons.join('; ')}`,'Lead Source':'Website','Portal Token':token};
     const optional={'ZIP Code':clean(d.zip),'Age':num(d.age),'Years Licensed':num(d.yearsLicensed),'Gig Platforms':clean(d.platform) ? [clean(d.platform)] : [],'Weekly Budget':num(d.budget),'Deposit Available':num(d.deposit),'Desired Start Date':validDate(d.startDate),'Hours Planned Per Week':num(d.hours)};
     for(const [k,v] of Object.entries(optional)) if(v!==null&&v!==undefined&&v!=='') fields[k]=v;
     let rec;
     try{rec=await createRecord(AT.applicants,fields)}
     catch(err){console.error('Airtable applicant validation:',err);return res.status(422).json({error:'We could not save your eligibility application. Please check the information entered and try again.',code:'AIRTABLE_VALIDATION'});}
-    let confirmationEmailSent=false; try{const mail=await sendApplicationConfirmation({...d,name,email,phone},result);confirmationEmailSent=mail.sent;}catch(mailErr){console.error('Application confirmation email:',mailErr.message)}
+    let confirmationEmailSent=false; try{const mail=await sendApplicationConfirmation({...d,name,email,phone},result);confirmationEmailSent=mail.sent;}catch(mailErr){console.error('Registration confirmation email:',mailErr.message)}
     res.json({ok:true,applicantId:rec.id,portalToken:token,name,email,phone,status:result.status,eligibilityStatus:result.status,score:result.score,tier:result.tier,reasons:result.reasons,confirmationEmailSent});
   }catch(e){sendError(res,e)}
 });
@@ -372,23 +370,6 @@ app.post('/api/schedule-pickup',async(req,res)=>{
     if(!['Pickup Pending','Active'].includes(rental.fields.Status)) return res.status(403).json({error:'Payment confirmation is required before scheduling pickup.'});
     await patchRecord(AT.rentals,rentalId,{'Pickup Date':date,'Pickup Window':window,'Status':'Pickup Pending'});
     res.json({ok:true});
-  }catch(e){sendError(res,e)}
-});
-
-app.post('/api/driver-login',async(req,res)=>{
-  try{
-    const email=String(req.body?.email||'').trim().toLowerCase();
-    if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({error:'Enter a valid email address.'});
-    const formula=`LOWER({Email})="${email.replace(/"/g,'')}"`;
-    const b=await atFetch(AT.applicants,`?maxRecords=1&filterByFormula=${encodeURIComponent(formula)}`);
-    const a=b.records?.[0];
-    if(a){
-      let token=a.fields['Portal Token'];
-      if(!token){token=crypto.randomBytes(24).toString('hex');await patchRecord(AT.applicants,a.id,{'Portal Token':token});}
-      const url=`${BASE_URL}/dashboard.html?applicantId=${encodeURIComponent(a.id)}&token=${encodeURIComponent(token)}`;
-      try{await sendEmail(a.fields.Email,'Your secure GigReady driver login','<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto"><h2>Sign in to GigReady</h2><p>Use the secure link below to access your Driver Dashboard.</p><p><a href="'+escHtml(url)+'" style="display:inline-block;background:#20b455;color:white;padding:13px 18px;text-decoration:none;border-radius:8px;font-weight:bold">Open Driver Dashboard</a></p><p style="font-size:13px;color:#667085">If you did not request this link, you can ignore this email.</p></div>');}catch(mailErr){console.error('Driver login email:',mailErr.message)}
-    }
-    res.json({ok:true,message:'If a GigReady account matches that email, a secure login link has been sent.'});
   }catch(e){sendError(res,e)}
 });
 
@@ -857,9 +838,13 @@ app.get('/health',(req,res)=>res.json({
 
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'index.html')));
 app.listen(PORT,'0.0.0.0',()=>console.log(`GigReady listening on ${PORT}`));
-+d.deposit):''],['Desired start date',d.startDate],['Hours planned per week',d.hours],['Eligibility result',result.status]].filter(([,v])=>v!==undefined&&v!==null&&v!=='');
-  const html='<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto"><h2>GigReady Application Confirmation</h2><p>We received your GigReady eligibility application. Below is a copy of the information you submitted for your records.</p><table style="width:100%;border-collapse:collapse">'+rows.map(([k,v])=>'<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">'+escHtml(k)+'</td><td style="padding:8px;border-bottom:1px solid #eee">'+escHtml(v)+'</td></tr>').join('')+'</table><p style="color:#667085;font-size:13px">Prequalification is not final rental approval and does not guarantee approval by any gig platform. Identity documents and driver-license images are not included in this email.</p></div>';
-  return sendEmail(d.email,'GigReady Application Confirmation',html);
++d.deposit):''],
+    ['Desired start date',d.startDate],['Hours planned per week',d.hours],['Eligibility result',result.status]
+  ].filter(([,v])=>v!==undefined&&v!==null&&v!=='');
+  const html='<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto"><h2>GigReady Registration Confirmation</h2><p>Thanks for registering with GigReady. We received your information and will contact you regarding next steps.</p><table style="width:100%;border-collapse:collapse">'+rows.map(([k,v])=>'<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">'+escHtml(k)+'</td><td style="padding:8px;border-bottom:1px solid #eee">'+escHtml(v)+'</td></tr>').join('')+'</table><p style="color:#667085;font-size:13px">This is a copy of your registration for your records. Prequalification is not final rental approval and does not guarantee approval by any gig platform. Sensitive driving-history answers and identity documents are not included in this email.</p></div>';
+  const rr=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+RESEND_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({from:APPLICATION_FROM_EMAIL,to:[d.email],subject:'GigReady Registration Confirmation',html})});
+  if(!rr.ok) throw new Error('Registration confirmation email failed: '+rr.status);
+  return {sent:true};
 }
 
 
