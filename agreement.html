@@ -37,7 +37,7 @@ if(q.get('payment')==='cancelled') msg.innerHTML='<div class="notice">Payment wa
 async function check(){
   if(!applicantId||!rentalId||!token){verify.className='notice error';verify.textContent='Booking session is missing.';return}
   try{const r=await fetch(`/api/stripe/identity-status?applicantId=${encodeURIComponent(applicantId)}&token=${encodeURIComponent(token)}`);const b=await r.json();if(!r.ok)throw new Error(b.error);
-    if(b.status==='verified'){verify.className='notice success';verify.textContent='Identity verified.';agreement.style.display='block'}
+    if(b.status==='verified'){verify.className='notice success';verify.textContent='Driver and identity verification complete.';agreement.style.display='block'}
     else{verify.className='notice error';verify.innerHTML=`Identity verification is not complete. <a href="kyc.html?applicantId=${encodeURIComponent(applicantId)}&rentalId=${encodeURIComponent(rentalId)}&token=${encodeURIComponent(token)}"><b>Return to verification</b></a>`}
   }catch(e){verify.className='notice error';verify.textContent=e.message}
 }
