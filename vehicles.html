@@ -67,17 +67,14 @@ async function load(){
 }
 async function hold(vehicleId){
   localStorage.setItem('gigreadySelectedVehicleId',vehicleId);
-  if(!session || session.status!=='Prequalified' || !session.applicantId || !session.portalToken){
-    localStorage.setItem('gigreadyNextAfterEligibility','vehicles.html?autobook=1');
-    location.href='prequal.html?next='+encodeURIComponent('vehicles.html?autobook=1');return;
+  // Launch flow is lead-generation first: a vehicle request starts/returns to registration.
+  if(!session?.applicantId || !session?.portalToken){
+    localStorage.setItem('gigreadyNextAfterEligibility','vehicles.html');
+    location.href='prequal.html?requestedVehicle='+encodeURIComponent(vehicleId);
+    return;
   }
-  msg.innerHTML='<div class="notice">Holding your vehicle…</div>';
-  try{
-    const r=await fetch('/api/vehicle-hold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({applicantId:session.applicantId,portalToken:session.portalToken,vehicleId})});
-    const b=await r.json();if(!r.ok)throw new Error(b.error);
-    localStorage.setItem('gigreadyRental',JSON.stringify({rentalId:b.rentalId,vehicle:b.vehicle,holdUntil:b.holdUntil}));
-    location.href=`kyc.html?applicantId=${encodeURIComponent(session.applicantId)}&rentalId=${encodeURIComponent(b.rentalId)}&token=${encodeURIComponent(session.portalToken)}`;
-  }catch(e){msg.innerHTML=`<div class="notice error">${esc(e.message)}</div>`;load()}
+  msg.innerHTML='<div class="waitbox"><h2>Vehicle request received</h2><p class="muted">Your interest in this vehicle has been noted. GigReady will contact you about availability, final requirements and next steps.</p></div>';
+  msg.scrollIntoView({behavior:'smooth'});
 }
 load();
 </script><script>
