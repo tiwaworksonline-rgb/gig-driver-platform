@@ -10,10 +10,10 @@ const BASE_URL = (process.env.PUBLIC_BASE_URL || `http://localhost:${PORT}`).rep
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 const AT = {
-  base: process.env.AIRTABLE_BASE_ID,
-  applicants: process.env.AIRTABLE_APPLICANTS_TABLE,
-  vehicles: process.env.AIRTABLE_VEHICLES_TABLE,
-  rentals: process.env.AIRTABLE_RENTALS_TABLE,
+  base: process.env.AIRTABLE_BASE_ID || 'appZsoBUHseZa2X9L',
+  applicants: process.env.AIRTABLE_APPLICANTS_TABLE || 'tblfBeiKiWXrLTiIJ',
+  vehicles: process.env.AIRTABLE_VEHICLES_TABLE || 'tblSAriW6yqlls3j5',
+  rentals: process.env.AIRTABLE_RENTALS_TABLE || 'tblibeVoM7hLq8vwi',
   token: process.env.AIRTABLE_TOKEN,
 };
 const AUTO_SEED_FLEET = (process.env.AUTO_SEED_FLEET || 'true').toLowerCase() !== 'false';
