@@ -41,8 +41,9 @@ save.onclick=async()=>{
   if(!date.value) return msg.innerHTML='<div class="notice error">Select a pickup date.</div>';
   save.disabled=true;
   try{const r=await fetch('/api/schedule-pickup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({applicantId,portalToken:token,rentalId,date:date.value,window:pickupWindow.value,sessionId})});const b=await r.json();if(!r.ok)throw new Error(b.error);
-    const a=JSON.parse(localStorage.getItem('gigreadyApplicant')||'null');
-    msg.innerHTML=`<div class="notice success"><h2>Pickup requested</h2><p>${date.value} • ${pickupWindow.value}</p><a class="btn btn-green" href="dashboard.html?applicantId=${encodeURIComponent(applicantId)}&token=${encodeURIComponent(token)}">Open driver dashboard</a></div>`;
+    const rental=JSON.parse(localStorage.getItem('gigreadyRental')||'null');
+    const vehicleName=rental?.vehicle?.name||'Your reserved vehicle';
+    msg.innerHTML=`<div class="notice success"><h2>Pickup requested ✓</h2><p><b>${vehicleName}</b></p><p><b>Date:</b> ${date.value}<br><b>Pickup window:</b> ${pickupWindow.value}<br><b>Status:</b> Pickup Pending</p><p class="muted">Your request has been saved. Final pickup is subject to completion of the rental requirements.</p><a class="btn btn-green" href="dashboard.html?applicantId=${encodeURIComponent(applicantId)}&token=${encodeURIComponent(token)}">Open Driver Dashboard</a></div>`;
   }catch(e){msg.innerHTML=`<div class="notice error">${e.message}</div>`}finally{save.disabled=false}
 };
 confirmPayment();
