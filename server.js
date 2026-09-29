@@ -76,7 +76,7 @@ function safeVehicle(v){
   return {
     id:v.id,name,year:f.Year,make:f.Make,model:f.Model,class:f['Vehicle Class']||'Standard',
     rate:Number(f['Weekly Rate']||0),deposit:Number(f.Deposit||500),status:f.Status,
-    photo:f['Vehicle Photos']?.[0]?.url || fallback[name] || '/ford-fusion-2017.png'
+    photo:f['Vehicle Photos']?.[0]?.url || fallback[name] || null
   };
 }
 function assess(d){
@@ -186,13 +186,17 @@ app.post('/api/waitlist',async(req,res)=>{
  try{
   const {applicantId,portalToken}=req.body||{};
   const a=await authenticateApplicant(applicantId,portalToken);
-  if(!['Not Eligible','Conditional Review','Documents Required','New Lead','Waitlist'].includes(a.fields['Prequal Status'])) return res.status(409).json({error:'This application is already progressing.'});
+  const currentStatus=a.fields['Prequal Status'];
+  if(!['Not Eligible','Conditional Review','Documents Required','New Lead','Waitlist','Prequalified'].includes(currentStatus)) return res.status(409).json({error:'This application is already progressing.'});
   const due=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
-  await patchRecord(AT.applicants,applicantId,{'Prequal Status':'Waitlist','Next Follow-Up':due});
+  // Preserve Prequalified so a qualified driver can still reserve an Available vehicle.
+  const applicantUpdate={'Next Follow-Up':due};
+  if(currentStatus!=='Prequalified') applicantUpdate['Prequal Status']='Waitlist';
+  await patchRecord(AT.applicants,applicantId,applicantUpdate);
   if(process.env.AIRTABLE_FOLLOWUPS_TABLE) try{
    await createRecord(process.env.AIRTABLE_FOLLOWUPS_TABLE,{'Follow-Up':`Waitlist re-screen - ${a.fields['Applicant Name']||'Applicant'}`,'Applicant':a.fields['Applicant Name']||'','Phone / Email':[a.fields.Phone,a.fields.Email].filter(Boolean).join(' / '),'Due Date':due,'Type':'Call','Status':'Open','Notes':`Re-screen eligibility. ${a.fields['Risk Notes']||''}`});
   }catch(x){console.error('Follow-up record:',x.message)}
-  res.json({ok:true,status:'Waitlist',followUp:due});
+  res.json({ok:true,status:currentStatus==='Prequalified'?'Prequalified':'Waitlist',inventoryWaitlist:true,followUp:due});
  }catch(e){sendError(res,e)}
 });
 
