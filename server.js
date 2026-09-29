@@ -173,7 +173,7 @@ app.post('/api/prequal',async(req,res)=>{
     if(!name||!email||!phone) return res.status(400).json({error:'Please enter your name, email and phone number.'});
     const result=assess(d),token=crypto.randomBytes(24).toString('hex');
     const fields={'Applicant Name':name,'Email':email,'Phone':phone,'License Valid':yes(d.licenseValid),'Already Platform Approved':yes(d.platformApproved),'Prequal Status':result.status,'Qualified Tier':result.tier,'Risk Notes':`Score ${result.score}. ${result.reasons.join('; ')}`,'Lead Source':'Website','Portal Token':token};
-    const optional={'ZIP Code':clean(d.zip),'Age':num(d.age),'Years Licensed':num(d.yearsLicensed),'Gig Platforms':clean(d.platform),'Weekly Budget':num(d.budget),'Deposit Available':num(d.deposit),'Desired Start Date':validDate(d.startDate),'Hours Planned Per Week':num(d.hours)};
+    const optional={'ZIP Code':clean(d.zip),'Age':num(d.age),'Years Licensed':num(d.yearsLicensed),'Gig Platforms':clean(d.platform) ? [clean(d.platform)] : [],'Weekly Budget':num(d.budget),'Deposit Available':num(d.deposit),'Desired Start Date':validDate(d.startDate),'Hours Planned Per Week':num(d.hours)};
     for(const [k,v] of Object.entries(optional)) if(v!==null&&v!==undefined&&v!=='') fields[k]=v;
     let rec;
     try{rec=await createRecord(AT.applicants,fields)}
