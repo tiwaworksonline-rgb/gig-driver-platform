@@ -22,7 +22,7 @@ input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-ra
 <div id="paymentState" class="notice">Confirming payment…</div>
 <div id="formWrap" style="display:none"><div class="grid">
 <div><label>Pickup date</label><input id="date" type="date"></div>
-<div><label>Pickup window</label><select id="window"><option>9 AM–12 PM</option><option>12 PM–3 PM</option><option>3 PM–6 PM</option></select></div>
+<div><label>Pickup window</label><select id="pickupWindow"><option>9 AM–12 PM</option><option>12 PM–3 PM</option><option>3 PM–6 PM</option></select></div>
 <div class="full"><button id="save" class="btn btn-dark" style="width:100%">Schedule pickup</button></div>
 </div></div><div id="msg"></div></div></div></main>
 <script>
@@ -40,9 +40,9 @@ async function confirmPayment(){
 save.onclick=async()=>{
   if(!date.value) return msg.innerHTML='<div class="notice error">Select a pickup date.</div>';
   save.disabled=true;
-  try{const r=await fetch('/api/schedule-pickup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({applicantId,portalToken:token,rentalId,date:date.value,window:window.value,sessionId})});const b=await r.json();if(!r.ok)throw new Error(b.error);
+  try{const r=await fetch('/api/schedule-pickup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({applicantId,portalToken:token,rentalId,date:date.value,window:pickupWindow.value,sessionId})});const b=await r.json();if(!r.ok)throw new Error(b.error);
     const a=JSON.parse(localStorage.getItem('gigreadyApplicant')||'null');
-    msg.innerHTML=`<div class="notice success"><h2>Pickup requested</h2><p>${date.value} • ${window.value}</p><a class="btn btn-green" href="dashboard.html?applicantId=${encodeURIComponent(applicantId)}&token=${encodeURIComponent(token)}">Open driver dashboard</a></div>`;
+    msg.innerHTML=`<div class="notice success"><h2>Pickup requested</h2><p>${date.value} • ${pickupWindow.value}</p><a class="btn btn-green" href="dashboard.html?applicantId=${encodeURIComponent(applicantId)}&token=${encodeURIComponent(token)}">Open driver dashboard</a></div>`;
   }catch(e){msg.innerHTML=`<div class="notice error">${e.message}</div>`}finally{save.disabled=false}
 };
 confirmPayment();
