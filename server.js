@@ -221,6 +221,45 @@ app.get('/api/vehicles',async(req,res)=>{
   }catch(e){sendError(res,e)}
 });
 
+
+app.post('/api/vehicle-request',async(req,res)=>{
+  try{
+    const {applicantId,portalToken,vehicleId}=req.body||{};
+    const applicant=await authenticateApplicant(applicantId,portalToken);
+    if(!vehicleId) return res.status(400).json({error:'Vehicle is required.'});
+    const vehicle=await getRecord(AT.vehicles,vehicleId);
+    if(!['Available','Coming Soon'].includes(vehicle.fields.Status)) return res.status(409).json({error:'This vehicle is no longer available to request.'});
+
+    const requestedVehicle=vehicle.fields.Vehicle||[vehicle.fields.Year,vehicle.fields.Make,vehicle.fields.Model].filter(Boolean).join(' ')||'Vehicle';
+    const now=new Date();
+    const requestedAt=now.toISOString();
+    const due=new Date(now.getTime()+86400000).toISOString().slice(0,10);
+    const existingNotes=String(applicant.fields.Notes||'').trim();
+    const requestNote=`Vehicle request: ${requestedVehicle} (${vehicleId}) on ${requestedAt}.`;
+    const notes=existingNotes ? `${existingNotes}\n${requestNote}` : requestNote;
+
+    await patchRecord(AT.applicants,applicantId,{
+      'Assigned Vehicle':requestedVehicle,
+      'Notes':notes,
+      'Next Follow-Up':due
+    });
+
+    if(process.env.AIRTABLE_FOLLOWUPS_TABLE) try{
+      await createRecord(process.env.AIRTABLE_FOLLOWUPS_TABLE,{
+        'Follow-Up':`Vehicle request - ${applicant.fields['Applicant Name']||'Applicant'}`,
+        'Applicant':applicant.fields['Applicant Name']||'',
+        'Phone / Email':[applicant.fields.Phone,applicant.fields.Email].filter(Boolean).join(' / '),
+        'Due Date':due,
+        'Type':'Call',
+        'Status':'Open',
+        'Notes':`Requested ${requestedVehicle}. Applicant status: ${applicant.fields['Prequal Status']||'Unknown'}.`
+      });
+    }catch(x){console.error('Vehicle request follow-up:',x.message)}
+
+    res.json({ok:true,vehicleId,vehicle:requestedVehicle,followUp:due});
+  }catch(e){sendError(res,e)}
+});
+
 app.post('/api/vehicle-hold',async(req,res)=>{
   try{
     const {applicantId,portalToken,vehicleId}=req.body||{};
