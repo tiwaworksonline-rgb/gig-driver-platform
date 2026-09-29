@@ -3,6 +3,7 @@
   "version": "5.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "npm run qa",
     "start": "node server.js",
     "qa": "node qa-check.js && node --check server.js"
   },
