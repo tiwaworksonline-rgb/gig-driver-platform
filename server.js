@@ -103,8 +103,17 @@ function assess(d){
 }
 async function authenticateApplicant(applicantId, token){
   if(!applicantId || !token) throw Object.assign(new Error('Applicant session is missing. Please complete eligibility again.'),{status:401});
-  const applicant=await getRecord(AT.applicants,applicantId);
-  if(token!==applicant.fields['Portal Token']) throw Object.assign(new Error('Invalid applicant session.'),{status:403});
+  let applicant;
+  try{
+    applicant=await getRecord(AT.applicants,applicantId);
+  }catch(e){
+    const msg=String(e?.message||'');
+    if(/Invalid permissions|model was not found|NOT_FOUND|INVALID_RECORD_ID/i.test(msg)){
+      throw Object.assign(new Error('Your saved GigReady session has expired. Please complete eligibility again.'),{status:401,code:'STALE_APPLICANT_SESSION'});
+    }
+    throw e;
+  }
+  if(token!==applicant.fields['Portal Token']) throw Object.assign(new Error('Your saved GigReady session has expired. Please complete eligibility again.'),{status:401,code:'STALE_APPLICANT_SESSION'});
   return applicant;
 }
 async function verifyRentalOwnership(rentalId, applicantId){
@@ -113,8 +122,9 @@ async function verifyRentalOwnership(rentalId, applicantId){
   return rental;
 }
 function sendError(res,e){
-  console.error(e);
-  res.status(e.status||500).json({error:e.message||'Unexpected server error'});
+  const status=e.status||500;
+  if(status>=500) console.error(e);
+  res.status(status).json({error:e.message||'Unexpected server error',code:e.code||undefined});
 }
 
 // Stripe webhook must be before express.json
