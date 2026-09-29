@@ -24,7 +24,7 @@ input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-ra
 </div></main>
 <style>
 .cars{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:22px}.car{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 6px 22px rgba(16,24,40,.05)}
-.car img{display:block;width:100%;height:230px;object-fit:cover;background:#eef2f6}.carbody{padding:19px}.pill{display:inline-block;background:#dcfce7;color:#166534;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+.car img{display:block;width:100%;height:230px;object-fit:cover;background:#eef2f6}.carbody{padding:19px}.pill{display:inline-block;background:#dcfce7;color:#166534;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}.pill.soon{background:#fff7ed;color:#9a3412}.section-title{grid-column:1/-1;margin:16px 0 0;font-size:26px}.waitbox{grid-column:1/-1;margin-top:10px;padding:24px;border-radius:18px;background:#f8fafc;border:1px solid var(--line)}
 .rate{font-size:30px;font-weight:900;margin:14px 0}.spec{color:var(--muted);font-size:14px}.hold{font-size:12px;color:var(--muted);margin-top:10px}
 @media(max-width:900px){.cars{grid-template-columns:1fr}}
 </style>
@@ -37,20 +37,23 @@ const fallback={
 const session=JSON.parse(localStorage.getItem('gigreadyApplicant')||'null');
 const chosen=localStorage.getItem('gigreadySelectedVehicleId');
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function imageFor(v){return fallback[v.name] || (v.photo&&/^https?:/i.test(v.photo)?v.photo:null) || fallback['2017 Ford Fusion'];}
+function imageFor(v){return fallback[v.name] || (v.photo&&/^https?:/i.test(v.photo)?v.photo:null) || '/hero-driver-main.png';}
+function carCard(v,soon=false){return `<article class="car"><img src="${imageFor(v)}" alt="${esc(v.name)}"><div class="carbody"><span class="pill ${soon?'soon':''}">${soon?'Coming Soon':'Available Now'}</span><h2>${esc(v.name)}</h2><div class="spec">${esc(v.class||'Standard')} • Automatic</div><div class="rate">${Number(v.rate).toFixed(0)}<small style="font-size:14px">/week</small></div>${soon?'<button class="btn btn-green" style="width:100%" onclick="joinPriorityWaitlist()">Join Priority Waitlist</button><div class="hold">Get priority notice when this vehicle becomes available.</div>':`<button class="btn btn-dark" style="width:100%" onclick="hold('${v.id}')">Request This Car</button><div class="hold">A successful request places a temporary 30-minute hold.</div>`}</div></article>`}
+function joinPriorityWaitlist(){if(!session?.applicantId||!session?.portalToken){localStorage.setItem('gigreadyNextAfterEligibility','vehicles.html');location.href='prequal.html?next='+encodeURIComponent('vehicles.html');return}msg.innerHTML='<div class="waitbox"><h2>Priority inventory list</h2><p class="muted">Confirm below and we’ll keep your application on file for upcoming inventory.</p><button class="btn btn-green" onclick="submitWaitlist()">Confirm Priority Waitlist</button></div>';msg.scrollIntoView({behavior:'smooth'});}
+async function submitWaitlist(){try{const r=await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({applicantId:session.applicantId,portalToken:session.portalToken})});const b=await r.json();if(!r.ok&&r.status!==409)throw new Error(b.error||'Unable to join waitlist.');msg.innerHTML='<div class="notice success"><b>You’re on the priority inventory list.</b> We’ll keep your application ready as vehicles become available.</div>';}catch(e){msg.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function load(){
   sessionBox.innerHTML=session?.status==='Prequalified'
     ? `<div class="notice success">Prequalified as <b>${esc(session.name)}</b>. Choose a vehicle below.</div>`
     : '<div class="notice">You can browse vehicles now. Eligibility is required before a vehicle can be held.</div>';
   try{
     const r=await fetch('/api/vehicles',{cache:'no-store'});const b=await r.json();if(!r.ok)throw new Error(b.error);
-    if(!b.vehicles?.length){cars.innerHTML='<div class="notice">No vehicles are currently published.</div>';return}
-    cars.innerHTML=b.vehicles.map(v=>`<article class="car">
-      <img src="${imageFor(v)}" alt="${esc(v.name)}" onerror="this.src=fallback['2017 Ford Fusion']">
-      <div class="carbody"><span class="pill">${esc(v.status)}</span><h2>${esc(v.name)}</h2>
-      <div class="spec">${esc(v.class||'Standard')} • Automatic</div><div class="rate">$${Number(v.rate).toFixed(0)}<small style="font-size:14px">/week</small></div>
-      <button class="btn btn-dark" style="width:100%" onclick="hold('${v.id}')">Request This Car</button>
-      <div class="hold">A successful request places a temporary 30-minute hold.</div></div></article>`).join('');
+    const all=b.vehicles||[], available=all.filter(v=>v.status==='Available'), upcoming=all.filter(v=>v.status==='Coming Soon');
+    let html='';
+    if(!available.length && upcoming.length) html+='<div class="notice full"><b>All current vehicles are reserved.</b> Join the priority list for upcoming inventory.</div>';
+    if(available.length) html+='<h2 class="section-title">Available now</h2>'+available.map(v=>carCard(v,false)).join('');
+    if(upcoming.length) html+='<h2 class="section-title">Coming soon</h2>'+upcoming.map(v=>carCard(v,true)).join('');
+    if(!all.length) html='<div class="waitbox"><h2>Current fleet is fully reserved</h2><p class="muted">Join the priority inventory list and we’ll keep your application ready for the next vehicle.</p><button class="btn btn-green" onclick="joinPriorityWaitlist()">Join Priority Waitlist</button></div>';
+    cars.innerHTML=html;
     const q=new URLSearchParams(location.search);
     if(q.get('autobook')==='1' && chosen && session?.status==='Prequalified'){localStorage.removeItem('gigreadySelectedVehicleId');setTimeout(()=>hold(chosen),350)}
   }catch(e){cars.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}
